@@ -1,0 +1,50 @@
+{
+  "name": "QR Scan",
+  "version": "1.0-concept",
+  "colors": {
+    "primary": "#4F6BFF",
+    "navy": "#0F172A",
+    "slate": "#475569",
+    "mint": "#34D399",
+    "light": "#F5F7FB",
+    "backgroundLight": "#F8F9FC",
+    "surfaceLight": "#FFFFFF",
+    "backgroundDark": "#0D1015",
+    "surfaceDark": "#151A21",
+    "textPrimaryLight": "#101318",
+    "textSecondaryLight": "#606773",
+    "textPrimaryDark": "#F6F7FA",
+    "textSecondaryDark": "#A9B1BD",
+    "success": "#34D399",
+    "warning": "#F4A940",
+    "danger": "#F06A6A"
+  },
+  "typography": {
+    "ios": "SF Pro (system)",
+    "android": "Roboto (system)",
+    "otp": "monospaced digits"
+  },
+  "spacing": [
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    32
+  ],
+  "radius": {
+    "small": 10,
+    "medium": 16,
+    "large": 20
+  },
+  "brand": {
+    "principles": [
+      "Private",
+      "Fast",
+      "Safe",
+      "Modern"
+    ],
+    "taglineConcept": "Fast \u2022 Safe \u2022 In Your Hands"
+  }
+}

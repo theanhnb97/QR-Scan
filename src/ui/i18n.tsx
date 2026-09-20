@@ -1,0 +1,152 @@
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { settingsRepository } from '../data/appContainer';
+
+export type Locale = 'vi' | 'en';
+
+const messages: Record<string, { vi: string; en: string }> = {
+  scan: { vi: 'Quét', en: 'Scan' },
+  history: { vi: 'Lịch sử', en: 'History' },
+  authenticator: { vi: 'Mã xác thực', en: 'Authenticator' },
+  create: { vi: 'Tạo mã', en: 'Create' },
+  settings: { vi: 'Cài đặt', en: 'Settings' },
+  backToScan: { vi: 'Quay lại Quét', en: 'Back to Scan' },
+  done: { vi: 'Xong', en: 'Done' },
+  cancel: { vi: 'Hủy', en: 'Cancel' },
+  close: { vi: 'Đóng', en: 'Close' },
+  copy: { vi: 'Sao chép', en: 'Copy' },
+  copied: { vi: 'Đã sao chép', en: 'Copied' },
+  share: { vi: 'Chia sẻ', en: 'Share' },
+  saveImage: { vi: 'Lưu ảnh', en: 'Save image' },
+  copyImage: { vi: 'Sao chép ảnh', en: 'Copy image' },
+  saved: { vi: 'Đã lưu', en: 'Saved' },
+  savedToPhotos: { vi: 'Mã đã được lưu vào Ảnh.', en: 'The generated code was saved to Photos.' },
+  saveFailed: { vi: 'Không thể lưu ảnh. Hãy kiểm tra quyền Ảnh.', en: 'The image could not be saved. Check Photos permission.' },
+  shareFailed: { vi: 'Không thể chia sẻ mã.', en: 'The generated code could not be shared.' },
+  generate: { vi: 'Tạo', en: 'Generate' },
+  qrCode: { vi: 'Mã QR', en: 'QR code' },
+  barcode: { vi: 'Mã vạch', en: 'Barcode' },
+  text: { vi: 'Văn bản', en: 'Text' },
+  url: { vi: 'Liên kết', en: 'URL' },
+  wifi: { vi: 'Wi-Fi', en: 'Wi-Fi' },
+  email: { vi: 'Email', en: 'Email' },
+  phone: { vi: 'Điện thoại', en: 'Phone' },
+  flashOn: { vi: 'Tắt đèn', en: 'Turn flash off' },
+  flashOff: { vi: 'Bật đèn', en: 'Turn flash on' },
+  zoom: { vi: 'Thu phóng', en: 'Zoom' },
+  autoScan: { vi: 'Tự động quét', en: 'Auto scan' },
+  scanHint: { vi: 'Đưa camera vào mã QR hoặc mã vạch', en: 'Point your camera at a QR code or barcode' },
+  scanTitle: { vi: 'Quét QR & mã vạch', en: 'Scan QR & barcodes' },
+  cameraOnly: { vi: 'Camera chỉ được dùng để quét mã ngay trên thiết bị.', en: 'Camera access is used only to scan codes on your device.' },
+  codeReadHistoryError: { vi: 'Đã đọc mã nhưng không thể lưu vào lịch sử.', en: 'The code was read, but could not be saved to history.' },
+  noCodeInImage: { vi: 'Không tìm thấy mã QR hoặc mã vạch trong ảnh.', en: 'No QR code or barcode was found in that image.' },
+  imageScanError: { vi: 'Không thể quét ảnh. Hãy thử ảnh rõ hơn.', en: 'The image could not be scanned. Try a clearer image.' },
+  cameraUnavailable: { vi: 'Camera tạm thời không khả dụng.', en: 'Camera scanning is temporarily unavailable.' },
+  copyContent: { vi: 'Sao chép nội dung', en: 'Copy content' },
+  openExternally: { vi: 'Mở bên ngoài', en: 'Open externally' },
+  openInApp: { vi: 'Mở trong app', en: 'Open in app' },
+  addAuthenticator: { vi: 'Thêm vào Mã xác thực', en: 'Add to Authenticator' },
+  importAccounts: { vi: 'Nhập tài khoản', en: 'Import accounts' },
+  importAccountsTitle: { vi: 'Nhập mã xác thực?', en: 'Import authenticators?' },
+  importAccountsBody: { vi: 'Các tài khoản sẽ được xem trước và lưu an toàn trên thiết bị.', en: 'Accounts will be previewed and stored securely on this device.' },
+  importSecurely: { vi: 'Nhập an toàn', en: 'Import securely' },
+  openWifi: { vi: 'Mở cài đặt Wi-Fi', en: 'Open Wi-Fi settings' },
+  takeAction: { vi: 'Thực hiện', en: 'Take action' },
+  scanFromImage: { vi: 'Chọn từ thư viện', en: 'Choose from library' },
+  generatedHistory: { vi: 'Lịch sử tạo mã', en: 'Generated history' },
+  generatedHistoryEmpty: { vi: 'Chưa có mã đã tạo', en: 'No generated codes yet' },
+  generatedHistoryHint: { vi: 'Các mã bạn tạo gần đây sẽ xuất hiện ở đây.', en: 'Codes you create recently will appear here.' },
+  useGeneratedCode: { vi: 'Dùng mã này', en: 'Use this code' },
+  historyUnavailable: { vi: 'Mã Wi-Fi trong lịch sử chỉ lưu tên mạng để bảo vệ mật khẩu.', en: 'Wi-Fi history keeps only the network name to protect the password.' },
+  scanning: { vi: 'Đang quét...', en: 'Scanning...' },
+  enableCamera: { vi: 'Cho phép camera', en: 'Enable Camera' },
+  openSettings: { vi: 'Mở Cài đặt', en: 'Open Settings' },
+  noScans: { vi: 'Chưa có mã đã quét', en: 'No scanned codes' },
+  noMatchingScans: { vi: 'Không có kết quả phù hợp', en: 'No matching scans' },
+  searchScans: { vi: 'Tìm kiếm lịch sử', en: 'Search scans' },
+  all: { vi: 'Tất cả', en: 'All' },
+  favorites: { vi: 'Yêu thích', en: 'Favorites' },
+  clear: { vi: 'Xóa hết', en: 'Clear' },
+  delete: { vi: 'Xóa', en: 'Delete' },
+  favorite: { vi: 'Yêu thích', en: 'Favorite' },
+  unfavorite: { vi: 'Bỏ yêu thích', en: 'Remove favorite' },
+  historyEmptyBody: { vi: 'Các mã bạn quét sẽ xuất hiện ở đây.', en: 'Codes you scan will appear here.' },
+  noAccounts: { vi: 'Chưa có tài khoản xác thực', en: 'No authenticator accounts' },
+  addAccount: { vi: 'Thêm tài khoản', en: 'Add account' },
+  addAccountMethod: { vi: 'Chọn cách thêm tài khoản', en: 'Choose how to add an account' },
+  addFromSetupKey: { vi: 'Thêm từ mã', en: 'Add from setup key' },
+  addFromQrCode: { vi: 'Thêm từ QR code', en: 'Add from QR code' },
+  searchAccounts: { vi: 'Tìm tài khoản theo tên hoặc dịch vụ', en: 'Search accounts by name or service' },
+  noMatchingAccounts: { vi: 'Không tìm thấy tài khoản phù hợp', en: 'No matching accounts' },
+  clearSearch: { vi: 'Xóa tìm kiếm', en: 'Clear search' },
+  importFromGoogleAuthenticator: { vi: 'Nhập từ Google Authenticator', en: 'Import from Google Authenticator' },
+  importFromGoogleAuthenticatorBody: { vi: 'Xuất tài khoản trong Google Authenticator rồi quét mã QR chuyển tài khoản trên màn hình.', en: 'Export accounts in Google Authenticator, then scan the transfer QR code shown on screen.' },
+  googleAuthenticatorImportTitle: { vi: 'Cách nhập từ Google Authenticator', en: 'How to import from Google Authenticator' },
+  googleAuthenticatorImportBody: { vi: 'Trên thiết bị cũ, mở Google Authenticator > Chuyển tài khoản > Xuất tài khoản. Sau đó đưa mã QR lên trước camera QR Scan hoặc chọn ảnh QR từ thư viện.', en: 'On the old device, open Google Authenticator > Transfer accounts > Export accounts. Then show the QR code to QR Scan or choose a QR image from your library.' },
+  yourCodes: { vi: 'Mã của bạn', en: 'Your codes' },
+  tapToCopy: { vi: 'chạm để sao chép', en: 'tap to copy' },
+  revealSecret: { vi: 'Hiện secret', en: 'Reveal secret' },
+  exportQr: { vi: 'Chia sẻ QR', en: 'Export QR' },
+  exportAllAccounts: { vi: 'Xuất tất cả mã xác thực', en: 'Export all authenticators' },
+  exportAllTitle: { vi: 'Xuất tất cả mã xác thực?', en: 'Export all authenticators?' },
+  exportAllBody: { vi: 'QR xuất chứa secret của các tài khoản. Chỉ quét bằng ứng dụng hoặc thiết bị bạn tin cậy.', en: 'The export QR contains account secrets. Scan it only with an app or device you trust.' },
+  exportAllBiometricReason: { vi: 'Xác thực để xuất mã xác thực', en: 'Authenticate to export authenticators' },
+  exportBatch: { vi: 'Mã QR %s/%s', en: 'QR %s/%s' },
+  exportBatchWarning: { vi: 'Tài khoản TOTP có chu kỳ khác 30 giây không thể xuất theo chuẩn Google migration.', en: 'TOTP accounts with a period other than 30 seconds cannot be exported in the Google migration format.' },
+  previous: { vi: 'Trước', en: 'Previous' },
+  next: { vi: 'Tiếp', en: 'Next' },
+  deleteAccount: { vi: 'Xóa tài khoản', en: 'Delete account' },
+  accountDetails: { vi: 'Chi tiết tài khoản', en: 'Account details' },
+  language: { vi: 'Ngôn ngữ', en: 'Language' },
+  vietnamese: { vi: 'Tiếng Việt', en: 'Vietnamese' },
+  english: { vi: 'English', en: 'English' },
+  appLock: { vi: 'Khóa ứng dụng', en: 'App lock' },
+  links: { vi: 'LIÊN KẾT', en: 'LINKS' },
+  data: { vi: 'DỮ LIỆU', en: 'DATA' },
+  clearHistoryTitle: { vi: 'Xóa lịch sử?', en: 'Clear history?' },
+  clearHistoryBody: { vi: 'Tất cả metadata quét không nhạy cảm sẽ bị xóa.', en: 'All non-secret scan history will be removed.' },
+  deleteScanTitle: { vi: 'Xóa bản quét?', en: 'Delete scan?' },
+  secretRevealed: { vi: 'Đã hiện secret', en: 'Secret revealed' },
+  secretWarning: { vi: 'Giữ khóa này riêng tư. Nó cho phép truy cập tài khoản của bạn.', en: 'Keep this key private. It grants access to your account.' },
+  exportAuthenticator: { vi: 'Chia sẻ QR mã xác thực', en: 'Export authenticator QR' },
+  exportWarning: { vi: 'QR này chứa secret. Chỉ chia sẻ tới thiết bị đáng tin cậy.', en: 'This QR contains your secret. Only share it with a trusted destination.' },
+  shareQr: { vi: 'Chia sẻ QR', en: 'Share QR' },
+  addTotp: { vi: 'Thêm tài khoản TOTP', en: 'Add TOTP account' },
+  issuerOptional: { vi: 'Nhà cung cấp (không bắt buộc)', en: 'Issuer (optional)' },
+  accountName: { vi: 'Tên tài khoản', en: 'Account name' },
+  base32Key: { vi: 'Khóa thiết lập Base32', en: 'Base32 setup key' },
+  digits: { vi: 'Số chữ số', en: 'Digits' },
+  period: { vi: 'Chu kỳ', en: 'Period' },
+  saveSecurely: { vi: 'Lưu an toàn', en: 'Save securely' },
+  saving: { vi: 'Đang lưu...', en: 'Saving...' },
+  editAccount: { vi: 'Sửa tài khoản', en: 'Edit account' },
+  saveChanges: { vi: 'Lưu thay đổi', en: 'Save changes' },
+  accountSaved: { vi: 'Tài khoản đã được lưu an toàn', en: 'Account saved securely' },
+  invalidBase32: { vi: 'Nhập khóa Base32 hợp lệ.', en: 'Enter a valid Base32 secret.' },
+  digitsError: { vi: 'Số chữ số phải là 6 hoặc 8.', en: 'Digits must be 6 or 8.' },
+  periodError: { vi: 'Chu kỳ phải từ 5 đến 3600 giây.', en: 'Period must be 5-3600 seconds.' },
+  security: { vi: 'BẢO MẬT', en: 'SECURITY' },
+  inAppBrowser: { vi: 'Trình duyệt trong app', en: 'In-app browser' },
+  externalBrowser: { vi: 'Trình duyệt ngoài', en: 'External browser' },
+};
+
+type LocaleContextValue = { locale: Locale; setLocale: (locale: Locale) => void; t: (key: string) => string };
+const LocaleContext = createContext<LocaleContextValue | null>(null);
+
+export const LocaleProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const [locale, setLocale] = useState<Locale>('vi');
+  useEffect(() => {
+    void settingsRepository.getSettings().then((settings) => setLocale(settings.language));
+  }, []);
+  const changeLocale = useCallback((nextLocale: Locale) => {
+    setLocale(nextLocale);
+    void settingsRepository.setLanguage(nextLocale);
+  }, []);
+  const value = useMemo(() => ({ locale, setLocale: changeLocale, t: (key: string) => messages[key]?.[locale] ?? key }), [changeLocale, locale]);
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+};
+
+export function useLocale(): LocaleContextValue {
+  const value = useContext(LocaleContext);
+  if (!value) throw new Error('useLocale must be used inside LocaleProvider');
+  return value;
+}
